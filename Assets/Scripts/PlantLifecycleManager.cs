@@ -27,17 +27,18 @@ namespace TMKOC.PlantLifecycle
         [SerializeField] private Transform hole;
         [SerializeField] private Transform waterCan;
         [SerializeField] private Transform gasoline;
+        [SerializeField] private Transform sun;
 
         //other plant related stuff...
         [SerializeField] private List<Sprite> plantSprites;
         [SerializeField] private PlantGrowthStage currentPlantGrowthStage;
-
+        public PlantGrowthStage CurrentPlantGrowthStage { get => currentPlantGrowthStage; set => currentPlantGrowthStage = value; }
 
 
         private void Start()
         {
             plant.GetComponent<SpriteRenderer>().sprite = null;
-            plant.DOLocalMoveY(-3.0f, 0.2f);
+            plant.DOLocalMove(new Vector2(-0.3f, -3), 0.2f);
             plant.DOScale(0, 0.2f);
 
 
@@ -45,6 +46,9 @@ namespace TMKOC.PlantLifecycle
             soilHeap.DOMoveX(1.8f, 0);
 
             hole.DOScale(0, 0);
+
+            waterCan.DOMoveX(20, 0);
+            gasoline.DOMoveX(-20, 0);
 
             seedBag.DOMoveX(15, 2);
 
@@ -72,46 +76,87 @@ namespace TMKOC.PlantLifecycle
                         seedBag.DOMoveX(15, 2).OnComplete(() =>
                         {
                             //bring in water and gasoline as options for growing the plant...
-                            waterCan.DOLocalMoveX(-6, 0.5f);
-                            gasoline.DOLocalMoveX(6, 0.5f);
-                        });
+                            // waterCan.DOLocalMoveX(6, 0.5f);
+                            // gasoline.DOLocalMoveX(-6, 0.5f);
 
+                            MoveWaterOptions(6, 1f);
+
+                        });
                     });
                 });
             });
         }
 
 
+        public void MoveWaterOptions(float xPos, float duration, Action onComplete = null)
+        {
+            waterCan.DOLocalMoveX(xPos, duration);
+            gasoline.DOLocalMoveX(-xPos, duration).OnComplete(() => { onComplete?.Invoke(); });
+        }
+
+        public void MoveSun(float xPos, Action onComplete = null)
+        {
+            sun.DOLocalMoveX(xPos, 1f).OnComplete(() => { onComplete?.Invoke(); });
+        }
+
+        public void ScaleSunAnim()
+        {
+            //need to scale the sun down and up...
+
+            Scale(1.3f);
+
+            void Scale(float val)
+            {
+                var ogScale = sun.localScale;
+                sun.DOScale(sun.localScale * val, 1).OnComplete(() =>
+                {
+                    sun.DOScale(ogScale, 1).OnComplete(() =>
+                    {
+                        Scale(val);
+                    });
+                });
+            }
+
+        }
+        public void ScaleSunStop() => sun.DOKill();
+
+
 
         //will call this whenever we grow the plant by any action...
         // [Button]
-        public void GrowPlant(PlantGrowthStage plantGrowthStage)
+        public void GrowPlant(PlantGrowthStage plantGrowthStage, Action onComplete = null)
         {
             switch (plantGrowthStage)
             {
                 case PlantGrowthStage.None:
+                    CurrentPlantGrowthStage = PlantGrowthStage.None;
                     plant.GetComponent<SpriteRenderer>().sprite = null;
                     plant.DOScale(0, 0.2f);
                     plant.DOLocalMoveY(-3.0f, 0.2f);
+
                     break;
                 case PlantGrowthStage.Small:
-                    SetPlant(-2.0f, 0.2f);
+                    CurrentPlantGrowthStage = PlantGrowthStage.Small;
+                    SetPlant(-2.0f, 0.2f, onComplete);
                     break;
                 case PlantGrowthStage.Medium:
-                    SetPlant(-1.65f, 0.3f);
+                    CurrentPlantGrowthStage = PlantGrowthStage.Medium;
+                    SetPlant(-1.65f, 0.3f, onComplete);
                     break;
                 case PlantGrowthStage.Big:
-                    SetPlant(-1.2f, 0.4f);
+                    CurrentPlantGrowthStage = PlantGrowthStage.Big;
+                    SetPlant(-1.2f, 0.4f, onComplete);
                     break;
                 default:
                     break;
             }
 
-            void SetPlant(float yPos, float scale)
+            void SetPlant(float yPos, float scale, Action onComplete)
             {
                 plant.GetComponent<SpriteRenderer>().sprite = plantSprites[(int)plantGrowthStage];
-                plant.DOScale(scale, 0.2f);
-                plant.DOLocalMoveY(yPos, 0.2f);
+                //the duration below needs to be same or the animation looks out of sync...
+                plant.DOScale(scale, 1f);
+                plant.DOLocalMoveY(yPos, 1f).OnComplete(() => { onComplete?.Invoke(); });   //just so that we can do something after this over...
             }
         }
 

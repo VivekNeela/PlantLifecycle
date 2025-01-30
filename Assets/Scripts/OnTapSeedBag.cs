@@ -26,17 +26,17 @@ namespace TMKOC.PlantLifecycle
         //might use this function later
         private void OnTapGrowPlant()
         {
-            if (currentPlantState == PlantGrowthStage.Big)
-            {
+            // if (currentPlantState == PlantGrowthStage.Big)
+            // {
 
-                currentPlantState = 0;
-                PlantLifecycleManager.Instance.GrowPlant(currentPlantState);
-            }
-            else
-            {
-                currentPlantState += 1;
-                PlantLifecycleManager.Instance.GrowPlant(currentPlantState);
-            }
+            //     currentPlantState = 0;
+            //     PlantLifecycleManager.Instance.GrowPlant(currentPlantState);
+            // }
+            // else
+            // {
+            //     currentPlantState += 1;
+            //     PlantLifecycleManager.Instance.GrowPlant(currentPlantState);
+            // }
 
         }
     }
