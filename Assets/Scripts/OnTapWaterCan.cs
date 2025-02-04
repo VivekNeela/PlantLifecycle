@@ -14,6 +14,8 @@ namespace TMKOC.PlantLifecycle
         private PlantLifecycleManager plm;
         public ParticleSystem waterSprinkle;
         // public bool selected;
+        public bool firstClick;
+        // public bool secondClick;
 
         private void Start()
         {
@@ -22,7 +24,8 @@ namespace TMKOC.PlantLifecycle
 
         public override void OnMouseDown()
         {
-            GetComponent<BoxCollider2D>().enabled = false;   //clicking only once...
+            // GetComponent<BoxCollider2D>().enabled = false;   //clicking only once...
+
             transform.DOMoveX(3, 1).OnComplete(() =>
             {
                 //after the water can pours water we grow the plant by one growth stage...
@@ -33,23 +36,59 @@ namespace TMKOC.PlantLifecycle
                     StartCoroutine(PlayParticleAndWait(waterSprinkle, 2, () =>
                     {
                         //grow the plant...
-                        plm.GrowPlant(PlantGrowthStage.Small, () =>
-                         {
-                             //send back gasoline and water can
-                             plm.MoveWaterOptions(20, 1, () =>
-                             {
-                                 //bring the sun...
-                                 plm.MoveSun(4, () =>
-                                 {
-                                     plm.ScaleSunAnim();
-                                 });
-                             });
-                         });
+                        // plm.GrowPlant(PlantGrowthStage.Small, () =>
+                        //  {
+                        //      //send back gasoline and water can
+                        //      plm.MoveWaterOptions(20, 1, () =>
+                        //      {
+                        //          transform.DORotate(new Vector3(0, 0, 0), 0.5f);
+                        //          //bring the sun...
+                        //          plm.MoveSun(4, () =>
+                        //          {
+                        //              plm.ScaleSunAnim();
+                        //          });
+                        //      });
+                        //  });
+
+                        if (!firstClick)
+                            WaterPlant(PlantGrowthStage.Small);
+                        else
+                            WaterPlant(PlantGrowthStage.Big);
 
                     }));
                 });
 
             });
+
+
+
+
+            void WaterPlant(PlantGrowthStage plantGrowthStage)
+            {
+                transform.DORotate(new Vector3(0, 0, 0), 0.5f);
+                //grow the plant...
+                plm.GrowPlant(plantGrowthStage, () =>
+                 {
+                     //send back gasoline and water can
+                     plm.MoveWaterOptions(20, 1, () =>
+                     {
+
+                         //bring the sun...
+                         if (!firstClick)
+                         {
+                             plm.MoveSun(4, () =>
+                             {
+                                 plm.ScaleSunAnim();
+                                 firstClick = true;
+
+                             });
+                         }
+
+                     });
+                 });
+            }
+
+
         }
 
 

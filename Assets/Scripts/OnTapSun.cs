@@ -15,7 +15,14 @@ namespace TMKOC.PlantLifecycle
                 PlantLifecycleManager.Instance.GrowPlant(PlantGrowthStage.Big);
                 return;
             }
-            PlantLifecycleManager.Instance.GrowPlant(PlantGrowthStage.Medium,()=>{PlantLifecycleManager.Instance.ScaleSunStop();});
+            PlantLifecycleManager.Instance.GrowPlant(PlantGrowthStage.Medium, () =>
+            {
+                PlantLifecycleManager.Instance.MoveSun(15, () =>
+                {
+                    //move the water can in again...
+                    PlantLifecycleManager.Instance.MoveWaterCan(6, 1);
+                });
+            });
         }
 
         public override void OnPointerDown(PointerEventData eventData)

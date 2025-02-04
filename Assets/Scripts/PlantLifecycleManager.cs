@@ -16,29 +16,42 @@ namespace TMKOC.PlantLifecycle
 
         [SerializeField] private Image BgImage;
         [SerializeField] private Image groundImage;
-        [SerializeField] private List<GroundSprite> groundSprites;
+        private List<GroundSprite> groundSprites;
         [SerializeField] private AnimationHandler sonuAnimHandler;
 
         //plant related gameobjects...
-        [SerializeField] private Transform seedBag;
+        [SerializeField] private Transform seedBags;
         [SerializeField] private Transform soilHeap;
         [SerializeField] private Transform plant;
-        [SerializeField] private Transform seed;
+        public Transform seed;
         [SerializeField] private Transform hole;
         [SerializeField] private Transform waterCan;
         [SerializeField] private Transform gasoline;
         [SerializeField] private Transform sun;
 
-        //other plant related stuff...
+        //plant related stuff...
         [SerializeField] private List<Sprite> plantSprites;
+        public List<Sprite> PlantSprites { get => plantSprites; set => plantSprites = value; }
+
+        // [Serializable]
+        // public struct PlantSprites
+        // {
+        //     public SeedType seedType;
+        //     public List<Sprite> sprites;
+        // }
+
+        // public List<PlantSprites> plantSpriteslist;
+
+        // public PlantSprites roseSprites;
+        // public PlantSprites jasmineSprites;
+
         [SerializeField] private PlantGrowthStage currentPlantGrowthStage;
         public PlantGrowthStage CurrentPlantGrowthStage { get => currentPlantGrowthStage; set => currentPlantGrowthStage = value; }
-
 
         private void Start()
         {
             plant.GetComponent<SpriteRenderer>().sprite = null;
-            plant.DOLocalMove(new Vector2(-0.3f, -3), 0.2f);
+            plant.DOLocalMove(new Vector2(-0.25f, -3), 0.2f);
             plant.DOScale(0, 0.2f);
 
 
@@ -50,7 +63,7 @@ namespace TMKOC.PlantLifecycle
             waterCan.DOMoveX(20, 0);
             gasoline.DOMoveX(-20, 0);
 
-            seedBag.DOMoveX(15, 2);
+            seedBags.DOMoveX(15, 2);
 
             sonuAnimHandler.transform.DOMoveX(0, 4).OnComplete(() =>
             {
@@ -62,28 +75,25 @@ namespace TMKOC.PlantLifecycle
 
         public void MoveSeedBag()
         {
-            seedBag.DOMoveX(5, 2).OnComplete(() =>
+            seedBags.DOMoveX(5, 2).OnComplete(() =>
             {
-                //sow the seed...
-                SowSeed(() =>
-                {
-                    //move the soil heap...
-                    soilHeap.DOLocalMoveX(hole.localPosition.x, 1f).OnComplete(() =>
-                    {
-                        // seed.SetParent(this.transform);   //dont need to do this...
-                        seed.GetComponent<SpriteRenderer>().enabled = false;
-                        //move the seedbag back...
-                        seedBag.DOMoveX(15, 2).OnComplete(() =>
-                        {
-                            //bring in water and gasoline as options for growing the plant...
-                            // waterCan.DOLocalMoveX(6, 0.5f);
-                            // gasoline.DOLocalMoveX(-6, 0.5f);
+                //sow the seed...lets do this on click...
+                // SowSeed(() =>
+                // {
+                //     //move the soil heap...
+                //     soilHeap.DOLocalMoveX(hole.localPosition.x, 1f).OnComplete(() =>
+                //     {
+                //         // seed.SetParent(this.transform);   //dont need to do this...
+                //         seed.GetComponent<SpriteRenderer>().enabled = false;
+                //         //move the seedbag back...
+                //         seedBag.DOMoveX(15, 2).OnComplete(() =>
+                //         {
+                //             //bring in water and gasoline as options for growing the plant...
+                //             MoveWaterOptions(6, 1f);
 
-                            MoveWaterOptions(6, 1f);
-
-                        });
-                    });
-                });
+                //         });
+                //     });
+                // });
             });
         }
 
@@ -92,6 +102,14 @@ namespace TMKOC.PlantLifecycle
         {
             waterCan.DOLocalMoveX(xPos, duration);
             gasoline.DOLocalMoveX(-xPos, duration).OnComplete(() => { onComplete?.Invoke(); });
+        }
+
+        public void MoveWaterCan(float xPos, float duration, Action onComplete = null)
+        {
+            waterCan.DOLocalMoveX(xPos, duration).OnComplete(() =>
+            {
+                onComplete?.Invoke();
+            });
         }
 
         public void MoveSun(float xPos, Action onComplete = null)
@@ -118,6 +136,7 @@ namespace TMKOC.PlantLifecycle
             }
 
         }
+
         public void ScaleSunStop() => sun.DOKill();
 
 
@@ -153,7 +172,7 @@ namespace TMKOC.PlantLifecycle
 
             void SetPlant(float yPos, float scale, Action onComplete)
             {
-                plant.GetComponent<SpriteRenderer>().sprite = plantSprites[(int)plantGrowthStage];
+                plant.GetComponent<SpriteRenderer>().sprite = PlantSprites[(int)plantGrowthStage];
                 //the duration below needs to be same or the animation looks out of sync...
                 plant.DOScale(scale, 1f);
                 plant.DOLocalMoveY(yPos, 1f).OnComplete(() => { onComplete?.Invoke(); });   //just so that we can do something after this over...
@@ -185,7 +204,7 @@ namespace TMKOC.PlantLifecycle
         }
 
 
-        public void SowSeed(Action onComplete)
+        private void SowSeed(Action onComplete)
         {
             var pos = new Vector3(hole.transform.position.x, hole.transform.position.y + 0.25f, hole.transform.position.z);
             seed.DOJump(pos, 5f, 1, 1f).OnComplete(() =>
@@ -193,6 +212,30 @@ namespace TMKOC.PlantLifecycle
                 onComplete?.Invoke();
             });
         }
+
+
+        public void SowSeed()
+        {
+            SowSeed(() =>
+            {
+                //move the soil heap...
+                soilHeap.DOLocalMoveX(hole.localPosition.x, 1f).OnComplete(() =>
+                {
+                    // seed.SetParent(this.transform);   //dont need to do this...
+                    seed.GetComponent<SpriteRenderer>().enabled = false;
+                    //move the seedbag back...
+                    seedBags.DOMoveX(15, 2).OnComplete(() =>
+                    {
+                        //bring in water and gasoline as options for growing the plant...
+                        MoveWaterOptions(6, 1f);
+
+                    });
+                });
+            });
+        }
+
+
+        public void SetPlantSprites(List<Sprite> sprites) => PlantSprites = sprites;
 
 
 
@@ -219,6 +262,15 @@ namespace TMKOC.PlantLifecycle
         Small = 1,
         Medium = 2,
         Big = 3,
+    }
+
+    public enum SeedType
+    {
+        None = 0,
+        Sunflower = 1,
+        Rose = 2,
+        Jasmine = 3,
+
     }
 
 
